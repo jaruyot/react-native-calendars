@@ -47,6 +47,10 @@ export default function shouldComponentUpdate(nextProps, nextState) {
     };
   }
 
+  if (nextState.expanded !== this.state.expanded) {
+    return true;
+  }
+
   //console.log(shouldUpdate.field, shouldUpdate.update);
   return shouldUpdate.update;
 }
