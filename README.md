@@ -125,24 +125,24 @@ Dot marking
 
 Multi-Dot marking
 
-![Screen shot of multiple dots](demo/marking4.png "Multiple dots marking")
+<kbd>
+ <img height=50 src="https://github.com/wix-private/wix-react-native-calendar/blob/master/demo/marking4.png?raw=true">
+</kbd>
 
 Use markingType = 'multi-dot' if you want to display more than one dot. Both the Calendar and CalendarList control support multiple dots by using 'dots' array in markedDates. The properties 'key' and 'color' are mandatory while 'selectedColor' is optional. If selectedColor is omitted then 'color' will be used for selected dates.
 ```javascript
-const vacation = {key='vacation', color: 'red', selectedColor: 'blue'};
-const massage = {key='massage', color: 'blue', selectedColor: 'blue'};
-const workout = {key='workout', color: 'green'};
+const vacation = {key:'vacation', color: 'red', selectedColor: 'blue'};
+const massage = {key:'massage', color: 'blue', selectedColor: 'blue'};
+const workout = {key:'workout', color: 'green'};
 
 <Calendar
   markedDates={{
-    '2017-10-25': {dots: [vacation, massage, workout]},
-    '2017-10-26': {dots: [massage, workout},
+    '2017-10-25': {dots: [vacation, massage, workout], selected: true},
+    '2017-10-26': {dots: [massage, workout], disabled: true},
   }},
   markingType={'multi-dot'}
 />
 ```
-
-
 
 
 Interval marking
