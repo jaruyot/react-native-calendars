@@ -11,7 +11,7 @@ import UnitDay from './day/interactive';
 import MultiDotDay from './day/multi-dot';
 import CalendarHeader from './header';
 import shouldComponentUpdate from './updater';
-import { weekDayNames, sameDate, fromTo } from '../dateutils';
+import { weekDayNames, sameDate, fromTo, firstSelectedDate } from '../dateutils';
 
 //Fallback when RN version is < 0.44
 const viewPropTypes = ViewPropTypes || View.propTypes;
@@ -78,13 +78,13 @@ class CollapsibleCalendar extends Component {
     } else {
       currentMonth = XDate();
     }
+
     this.state = {
       currentMonth,
       animation: new Animated.Value(calendarMinHeight),
       scrollY: 400,
       expanded: false,
-      selectedDay: new XDate(),
-      dateListMonth: currentMonth
+      selectedDay: new XDate()
     };
 
     this.updateMonth = this.updateMonth.bind(this);
@@ -105,6 +105,16 @@ class CollapsibleCalendar extends Component {
       this.setState({
         currentMonth: current.clone()
       });
+    }
+
+    if (this.props.markedDates !== nextProps.markedDates) {
+      const currentSelectedDate = firstSelectedDate(this.props.markedDates);
+      const newSelectedDate = firstSelectedDate(nextProps.markedDates);
+      if (newSelectedDate && currentSelectedDate !== newSelectedDate) {
+        this.setState({
+          selectedDay: parseDate(newSelectedDate)
+        });
+      }
     }
   }
 
@@ -139,19 +149,16 @@ class CollapsibleCalendar extends Component {
     const maxDate = parseDate(this.props.maxDate);
     if (!(minDate && !dateutils.isGTE(day, minDate)) && !(maxDate && !dateutils.isLTE(day, maxDate))) {
       const shouldUpdateMonth = this.props.disableMonthChange === undefined || !this.props.disableMonthChange;
-      if (shouldUpdateMonth) {
+      if (shouldUpdateMonth && this.state.expanded) {
         this.updateMonth(day);
-      }
-      if (this.props.onDayPress) {
-        this.props.onDayPress(xdateToData(day));
       }
 
       this.setState({
         selectedDay: day
       });
 
-      if (this.state.expanded) {
-        this.toggleCalendarView(true);
+      if (this.props.onDayPress) {
+        this.props.onDayPress(xdateToData(day));
       }
     }
   }
@@ -182,38 +189,43 @@ class CollapsibleCalendar extends Component {
     return date.addDays(-diff);
   }
 
-  scrollToDateList(dayPressed = false) {
+  scrollToDateList() {
     if (this.dateListScroll) {
       const minDate = parseDate(this.props.minDate);
 
       const firstDay = this.getFirstDayInWeek(minDate);
-      let updateMonth = true;
 
-      let scrollToDay = this.state.selectedDay;
-      if (!scrollToDay) {
+      const selectedDay = this.state.selectedDay;
+      let scrollToDay;
+      if (selectedDay) {
+        scrollToDay = new XDate(selectedDay.getFullYear(), selectedDay.getMonth(), selectedDay.getDate(), 1, 0, 0, 0, true);
+        scrollToDay = this.getFirstDayInWeek(scrollToDay);
+      } else {
         const currentMonth = this.state.currentMonth;
-        updateMonth = false;
         scrollToDay = new XDate(currentMonth.getFullYear(), currentMonth.getMonth(), 1, 0, 0, 0, true);
       }
-      scrollToDay = this.getFirstDayInWeek(scrollToDay);
-      if (dayPressed === true) {
-        const dayIndex = firstDay.diffDays(scrollToDay);
-        let xPosition = 0;
-        if (dayIndex > -1) {
-          xPosition = dayIndex * 38;
-        }
-        // console.log('dayIndex=', dayIndex);
-        console.log('scrollToDay=', scrollToDay, this.state.currentMonth);
-        console.log('dayPressed', dayPressed);
-
-        // console.log('xPosition=', xPosition);
-        this.dateListScroll.scrollTo({y: 0, x: xPosition, animated: false});
-        this.updateMonth(scrollToDay);
-      } else {
-        this.updateMonth(this.state.dateListMonth);
+      
+      const dayIndex = firstDay.diffDays(scrollToDay);
+      let xPosition = 0;
+      if (dayIndex > -1) {
+        xPosition = dayIndex * 38;
       }
 
+      this.dateListScroll.scrollTo({y: 0, x: xPosition, animated: true});
+      this.setMonthHeader(scrollToDay);
     }
+  }
+
+  setMonthHeader(date) {
+    const selectedDay = this.state.selectedDay;
+    let currentDate = date;
+    if (selectedDay) {
+      const diff = date.diffDays(selectedDay); 
+      if (diff >= 0 && diff < 7) {
+        currentDate = selectedDay;
+      }
+    }
+    this.updateMonth(currentDate);
   }
 
   onDateListScroll(event) {
@@ -222,14 +234,11 @@ class CollapsibleCalendar extends Component {
     const firstDay = this.getFirstDayInWeek(minDate);
 
     const dayIndex = Math.floor(xpos / 38);
-    const dateByPosition = firstDay.addDays(dayIndex);
+    const currentDate = firstDay.addDays(dayIndex);
 
-    const shouldUpdateMonth = this.props.disableMonthChange === undefined || !this.props.disableMonthChange;
+    const shouldUpdateMonth = (this.props.disableMonthChange === undefined || !this.props.disableMonthChange);
     if (shouldUpdateMonth) {
-      this.updateMonth(dateByPosition);
-      this.setState({
-        dateListMonth: dateByPosition
-      });
+      this.setMonthHeader(currentDate);
     }
   }
 
@@ -254,10 +263,24 @@ class CollapsibleCalendar extends Component {
     return 0;
   }
 
-  toggleCalendarView(dayPressed = false) {
+  toggleCalendarView() {
+    this.changeCalendarView(!this.state.expanded);
+  }
+
+  changeCalendarView(expand) {
+    if (this.state.expanded === expand) {
+      return;
+    }
+
     let initialValue;
     let finalValue;
-    if (this.state.expanded) {
+    if (expand) {
+      initialValue = calendarMinHeight;
+      //finalValue = this.state.scrollY;
+      finalValue = calendarMaxHeight;
+      
+      this.calendarScroll.scrollTo({y: 0, animated: true});
+    } else {
       // initialValue = this.state.scrollY;
       initialValue = calendarMaxHeight;
       finalValue = calendarMinHeight;
@@ -267,21 +290,12 @@ class CollapsibleCalendar extends Component {
       }
       this.scrollViewMoved = false;
 
-      //if (dayPressed === true) {
-        setTimeout(() => { this.scrollToDateList(dayPressed); }, 10);
-      //}
-     
-      
-    } else {
-      initialValue = calendarMinHeight;
-      //finalValue = this.state.scrollY;
-      finalValue = calendarMaxHeight;
-      
-      this.calendarScroll.scrollTo({y: 0, animated: true});
+      setTimeout(() => { this.scrollToDateList(); }, 10);
+
     }
 
     this.setState({
-      expanded : !this.state.expanded
+      expanded : expand
     });
 
     this.state.animation.setValue(initialValue);
@@ -388,6 +402,17 @@ class CollapsibleCalendar extends Component {
       week.push(this.renderDay(day, idx, true));
     }, this);
     return (<View style={this.style.week}>{week}</View>);
+  }
+
+  renderFooter() {
+    return (
+      <View style={{ flex: 0, flexDirection: 'row', paddingBottom: 4, justifyContent: 'space-between', marginTop: 4}}>
+        <TouchableOpacity onPress={this.goToToday}>
+          <Text style={{fontSize: 14, color: '#5158B2', textDecorationLine: 'underline'}}>Go to today</Text>
+        </TouchableOpacity>
+        { this.renderDotLabels() }
+      </View>
+    );
   }
 
   render() {

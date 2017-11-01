@@ -80,6 +80,15 @@ function page(xd, firstDayOfWeek) {
   return before.concat(days.slice(1, days.length - 1), after);
 }
 
+function firstSelectedDate(markedDates) {
+  for (let key in markedDates) {
+    if (markedDates[key].selected) {
+      return key;
+    }
+  }
+  return undefined;
+}
+
 module.exports = {
   weekDayNames,
   sameMonth,
@@ -88,5 +97,6 @@ module.exports = {
   page,
   fromTo,
   isLTE,
-  isGTE
+  isGTE,
+  firstSelectedDate
 };
