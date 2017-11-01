@@ -415,13 +415,19 @@ class CollapsibleCalendar extends Component {
   renderWeekView() {
     const minDate = parseDate(this.props.minDate);
     const maxDate = parseDate(this.props.maxDate);
-    let diff = minDate.getDay() - this.props.firstDay;
-    if (diff < 0) {
-      diff += 7;
+    let minDiff = minDate.getDay() - this.props.firstDay;
+    if (minDiff < 0) {
+      minDiff += 7;
     }
-    const firstDay = minDate.addDays(-diff);
+    const firstDay = minDate.addDays(-minDiff);
 
-    const days = fromTo(firstDay, maxDate);
+    let maxDiff = 6 - maxDate.getDay() + this.props.firstDay;
+    if (maxDiff > 6) {
+      maxDiff -= 7;
+    }
+    const lastDay = maxDate.addDays(maxDiff);
+
+    const days = fromTo(firstDay, lastDay);
     const week =[];
     days.forEach((day, idx) => {
       week.push(this.renderDay(day, idx, true));
