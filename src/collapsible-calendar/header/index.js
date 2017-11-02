@@ -19,7 +19,8 @@ class CalendarHeader extends Component {
     hideDayNames: PropTypes.bool,
     onMonthPress: PropTypes.func,
     minDate: PropTypes.any,
-    maxDate: PropTypes.any
+    maxDate: PropTypes.any,
+    dividerImage: PropTypes.any
   };
 
   constructor(props) {
@@ -101,14 +102,21 @@ class CalendarHeader extends Component {
           {leftArrow}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignContent: 'center' }}>
             <TouchableOpacity onPress={this.props.onMonthPress}>
-              <Text style={this.style.monthText}>
-                {this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
-              </Text>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={this.style.monthText}>
+                  {this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
+                </Text>
+                <Text style={[{transform: [{ rotate: this.props.hideArrows ? '90deg' : '270deg'}], alignSelf: 'center', fontSize: 18, color: '#a0a0a0'}]}>&gt;</Text>
+              </View>
             </TouchableOpacity>
             {indicator}
           </View>
           {rightArrow}
         </View>
+        {
+          this.props.dividerImage &&
+          <Image source={this.props.dividerImage} style={this.style.dividerImage}/>
+        }
       </View>
     );
   }

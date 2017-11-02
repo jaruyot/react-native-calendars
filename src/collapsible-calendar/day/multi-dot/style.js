@@ -13,7 +13,7 @@ export default function styleConstructor(theme={}) {
       overflow: 'hidden'
     },
     text: {
-      marginTop: 4,
+      marginTop: 0,
       fontSize: appStyle.textDayFontSize,
       fontFamily: appStyle.textDayFontFamily,
       fontWeight: '300',
@@ -28,8 +28,17 @@ export default function styleConstructor(theme={}) {
       backgroundColor: appStyle.selectedDayBackgroundColor,
       borderRadius: 16
     },
+    selectedToday: {
+      backgroundColor: appStyle.selectedTodayBackgroundColor,
+      borderRadius: 16
+    },
+    selectedTodayText: {
+      color: appStyle.selectedTodayTextColor,
+      fontWeight: '500'
+    },
     todayText: {
-      color: appStyle.todayTextColor
+      color: appStyle.todayTextColor,
+      fontWeight: '500'
     },
     selectedText: {
       color: appStyle.selectedDayTextColor

@@ -80,8 +80,13 @@ class Day extends Component {
     const dot = this.renderDots(marked);
 
     if (marked.selected) {
-      containerStyle.push(this.style.selected);
-      textStyle.push(this.style.selectedText);
+      if (this.props.state === 'today') {
+        containerStyle.push(this.style.selectedToday);
+        textStyle.push(this.style.selectedTodayText);
+      } else {
+        containerStyle.push(this.style.selected);
+        textStyle.push(this.style.selectedText);
+      }
     } else if (typeof marked.disabled !== 'undefined' ? marked.disabled : this.props.state === 'disabled') {
       textStyle.push(this.style.disabledText);
     } else if (this.props.state === 'today') {

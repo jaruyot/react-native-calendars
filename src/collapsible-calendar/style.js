@@ -14,10 +14,24 @@ export default function getStyle(theme={}) {
       overflow: 'hidden'
     },
     week: {
-      marginTop: 2,
-      marginBottom: 2,
+      marginTop: 0,
+      marginBottom: 0,
       flexDirection: 'row',
       justifyContent: 'space-around'
+    },
+    weekName: {
+      marginTop: 3,
+      flexDirection: 'row',
+      justifyContent: 'space-around'
+    },
+    dayHeader: {
+      marginTop: 2,
+      marginBottom: 2,
+      width: 42,
+      textAlign: 'center',
+      fontSize: appStyle.textDayHeaderFontSize,
+      fontFamily: appStyle.textDayHeaderFontFamily,
+      color: appStyle.textSectionTitleColor
     },
     ...(theme[STYLESHEET_ID] || {})
   });
