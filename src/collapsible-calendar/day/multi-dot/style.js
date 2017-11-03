@@ -8,10 +8,17 @@ export default function styleConstructor(theme={}) {
   return StyleSheet.create({
     base: {
       width: 32,
-      height: 32,
+      height: 36,
       alignItems: 'center',
+      justifyContent: 'center',
       overflow: 'hidden'
     },
+    date: {
+      width: 24,
+      height: 24,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },    
     text: {
       marginTop: 0,
       fontSize: appStyle.textDayFontSize,

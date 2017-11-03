@@ -41,3 +41,4 @@ export const selectedTodayBackgroundColor = '#9D4182';
 export const collapsibleMinHeight = 38;
 export const collapsibleMaxHeight = 244;
 export const weekendBackgroundColor = '#F9F9F9';
+export const collapsedBackground = '#f5f5f5';

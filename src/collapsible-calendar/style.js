@@ -13,6 +13,9 @@ export default function getStyle(theme={}) {
       backgroundColor: appStyle.calendarBackground,
       overflow: 'hidden'
     },
+    collapsedContainer: {
+      backgroundColor: appStyle.collapsedBackground
+    },
     week: {
       marginTop: 0,
       marginBottom: 0,
@@ -33,9 +36,17 @@ export default function getStyle(theme={}) {
       fontFamily: appStyle.textDayHeaderFontFamily,
       color: appStyle.textSectionTitleColor
     },
-    collapsible: {
+    collapsibleMain: {
       minHeight: appStyle.collapsibleMinHeight,
-      maxHeight: appStyle.collapsibleMaxHeight
+      maxHeight: appStyle.collapsibleMaxHeight,
+      overflow: 'hidden',
+      alignItems: 'center'
+    },
+    collapsibleDateList: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      overflow: 'hidden'
     },
     ...(theme[STYLESHEET_ID] || {})
   });

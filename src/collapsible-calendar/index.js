@@ -83,8 +83,8 @@ class CollapsibleCalendar extends Component {
       currentMonth = XDate();
     }
 
-    this.collapsibleMinHeight = StyleSheet.flatten(this.style.collapsible).minHeight;
-    this.collapsibleMaxHeight = StyleSheet.flatten(this.style.collapsible).maxHeight;
+    this.collapsibleMinHeight = StyleSheet.flatten(this.style.collapsibleMain).minHeight;
+    this.collapsibleMaxHeight = StyleSheet.flatten(this.style.collapsibleMain).maxHeight;
 
     this.state = {
       currentMonth,
@@ -407,8 +407,12 @@ class CollapsibleCalendar extends Component {
     }
     
     const weekDaysNames = weekDayNames(this.props.firstDay);
+    const containerStyle = [this.style.container, this.props.style];
+    if (!this.state.expanded) {
+      containerStyle.push(this.style.collapsedContainer);
+    }
     return (
-      <View style={[this.style.container, this.props.style, {backgroundColor: this.state.expanded ? '#ffffff': '#f5f5f5'}]}>
+      <View style={containerStyle}>
         <CalendarHeader
           theme={this.props.theme}
           hideArrows={this.props.hideArrows || !this.state.expanded}
@@ -431,7 +435,7 @@ class CollapsibleCalendar extends Component {
           ))}
         </View>
         
-        <Animated.View style={[this.style.collapsible, {height: this.state.calendarHeight, overflow: 'hidden', alignItems: 'center'}]}>
+        <Animated.View style={[this.style.collapsibleMain, {height: this.state.calendarHeight}]}>
           <Animated.View style={{overflow: 'hidden', opacity: this.state.calendarOpacity}}>
             {weeks}
             <View style={{flex: 1, flexDirection: 'column', justifyContent: 'flex-end'}}>
@@ -439,8 +443,7 @@ class CollapsibleCalendar extends Component {
             </View>
           </Animated.View>
 
-          <Animated.View style={{ position: 'absolute', top: 0, left: 0, overflow: 'hidden',
-            display: this.state.expanded ? 'none' : 'flex', opacity: this.state.dateListOpacity}}>
+          <Animated.View style={[this.style.collapsibleDateList, {display: this.state.expanded ? 'none' : 'flex', opacity: this.state.dateListOpacity}]}>
             <ScrollView ref={ref => {this.dateListScroll = ref;}} horizontal={true} pagingEnabled={true} scrollEventThrottle={0} overScrollMode='never'
               showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} onScroll={this.onDateListScroll}>
               { this.renderWeekView() }
