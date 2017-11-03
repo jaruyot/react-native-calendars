@@ -46,6 +46,14 @@ export default function styleConstructor(theme={}) {
     disabledText: {
       color: appStyle.textDisabledColor
     },
+    weekend: {
+      backgroundColor: appStyle.weekendBackgroundColor
+    },
+    dotContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
     dot: {
       width: 4,
       height: 4,

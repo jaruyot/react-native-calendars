@@ -17,7 +17,7 @@ export default function getStyle(theme={}) {
       marginTop: 0,
       marginBottom: 0,
       flexDirection: 'row',
-      justifyContent: 'space-around'
+      justifyContent: 'center'
     },
     weekName: {
       marginTop: 3,
@@ -32,6 +32,10 @@ export default function getStyle(theme={}) {
       fontSize: appStyle.textDayHeaderFontSize,
       fontFamily: appStyle.textDayHeaderFontFamily,
       color: appStyle.textSectionTitleColor
+    },
+    collapsible: {
+      minHeight: appStyle.collapsibleMinHeight,
+      maxHeight: appStyle.collapsibleMaxHeight
     },
     ...(theme[STYLESHEET_ID] || {})
   });

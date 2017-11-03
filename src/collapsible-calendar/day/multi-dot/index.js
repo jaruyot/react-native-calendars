@@ -17,7 +17,8 @@ class Day extends Component {
     theme: PropTypes.object,
     marked: PropTypes.any,
     onPress: PropTypes.func,
-    day: PropTypes.object
+    day: PropTypes.object,
+    highlightWeekend: PropTypes.bool
   };
 
   constructor(props) {
@@ -73,18 +74,24 @@ class Day extends Component {
   }
 
   render() {
-    const containerStyle = [this.style.base];
+    const baseStyle = [this.style.base];
+    const dateStyle = [this.style.date];
     const textStyle = [this.style.text];
 
     const marked = this.props.marked || {};
     const dot = this.renderDots(marked);
 
+    const dayOfWeek = this.props.day.getDay();
+    if (this.props.highlightWeekend && (dayOfWeek === 0 || dayOfWeek === 6)) {
+      baseStyle.push(this.style.weekend);
+    }
+
     if (marked.selected) {
       if (this.props.state === 'today') {
-        containerStyle.push(this.style.selectedToday);
+        dateStyle.push(this.style.selectedToday);
         textStyle.push(this.style.selectedTodayText);
       } else {
-        containerStyle.push(this.style.selected);
+        dateStyle.push(this.style.selected);
         textStyle.push(this.style.selectedText);
       }
     } else if (typeof marked.disabled !== 'undefined' ? marked.disabled : this.props.state === 'disabled') {
@@ -93,9 +100,14 @@ class Day extends Component {
       textStyle.push(this.style.todayText);
     }
     return (
-      <TouchableOpacity style={containerStyle} onPress={this.onDayPress}>
-        <Text style={textStyle}>{String(this.props.children)}</Text>
-        <View style={{flexDirection: 'row'}}>{dot}</View>
+      <TouchableOpacity style={baseStyle} onPress={this.onDayPress}>
+        <View style={dateStyle}>
+          <Text style={textStyle}>{String(this.props.children)}</Text>
+        </View>
+        { 
+          dot && 
+          <View style={this.style.dotContainer}>{dot}</View>
+        }
       </TouchableOpacity>
     );
   }

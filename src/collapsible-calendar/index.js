@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { View, ViewPropTypes, Text, Animated, ScrollView, Platform, Dimensions } from 'react-native';
+import { View, ViewPropTypes, Text, Animated, ScrollView, Dimensions, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 
 import XDate from 'xdate';
@@ -11,15 +11,12 @@ import UnitDay from './day/interactive';
 import MultiDotDay from './day/multi-dot';
 import CalendarHeader from './header';
 import shouldComponentUpdate from './updater';
-import { weekDayNames, sameDate, fromTo, firstSelectedDate } from '../dateutils';
+import { weekDayNames, fromTo, firstSelectedDate } from '../dateutils';
 
 //Fallback when RN version is < 0.44
 const viewPropTypes = ViewPropTypes || View.propTypes;
 
 const EmptyArray = [];
-
-const calendarMaxHeight = 244;
-const calendarMinHeight = 36;
 
 class CollapsibleCalendar extends Component {
   static propTypes = {
@@ -68,8 +65,13 @@ class CollapsibleCalendar extends Component {
     // Display content below calendar
     footer: PropTypes.object,
     // Divider image below the month name
-    dividerImage: PropTypes.any
+    dividerImage: PropTypes.any,
+    // Min height and max height of the calendar
+    heightLimits: PropTypes.object
   };
+
+  collapsibleMinHeight;
+  collapsibleMaxHeight;
 
   constructor(props) {
     super(props);
@@ -81,11 +83,14 @@ class CollapsibleCalendar extends Component {
       currentMonth = XDate();
     }
 
+    this.collapsibleMinHeight = StyleSheet.flatten(this.style.collapsible).minHeight;
+    this.collapsibleMaxHeight = StyleSheet.flatten(this.style.collapsible).maxHeight;
+
     this.state = {
       currentMonth,
-      calendarHeight: new Animated.Value(calendarMinHeight),
       expanded: false,
       selectedDay: new XDate(),
+      calendarHeight: new Animated.Value(this.collapsibleMinHeight),
       calendarOpacity: new Animated.Value(0),
       dateListOpacity: new Animated.Value(1)
     };
@@ -100,7 +105,7 @@ class CollapsibleCalendar extends Component {
   }
 
   componentWillMount() {
-    setTimeout(() => { this.scrollToDateList(); }, 100);
+    setTimeout(() => { this.scrollToDate(); }, 100);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -121,7 +126,6 @@ class CollapsibleCalendar extends Component {
       }
     }
   }
-
 
   updateMonth(day, doNotTriggerListeners) {
     if (day.toString('yyyy MM') === this.state.currentMonth.toString('yyyy MM')) {
@@ -165,21 +169,16 @@ class CollapsibleCalendar extends Component {
     this.updateMonth(this.state.currentMonth.clone().addMonths(count, true));
   }
 
-
   getFirstDayInWeek(date) {
     let diff = date.getDay() - this.props.firstDay;
     if (diff < 0) {
       diff += 7;
     }
-    return date.addDays(-diff);
+    return date.clone().addDays(-diff);
   }
 
-  scrollToDateList() {
-    if (this.dateListScroll) {
-      const minDate = parseDate(this.props.minDate);
-
-      const firstDay = this.getFirstDayInWeek(minDate);
-
+  scrollToDate() {
+    if (this.dateListScroll) {      
       const selectedDay = this.state.selectedDay;
       let scrollToDay;
       if (selectedDay) {
@@ -190,6 +189,8 @@ class CollapsibleCalendar extends Component {
         scrollToDay = new XDate(currentMonth.getFullYear(), currentMonth.getMonth(), 1, 0, 0, 0, true);
       }
 
+      const minDate = parseDate(this.props.minDate);
+      const firstDay = this.getFirstDayInWeek(minDate);
       const dayIndex = firstDay.diffDays(scrollToDay);
       let xPosition = 0;
       if (dayIndex > -1) {
@@ -220,34 +221,22 @@ class CollapsibleCalendar extends Component {
 
   onDateListScroll(event) {
     const xpos = event.nativeEvent.contentOffset.x;
+
+    // On Android, onScroll could be triggered even though there is no scroll and x-position will be near 0.
+    if (xpos < 1) {
+      return;
+    }
     const minDate = parseDate(this.props.minDate);
     const firstDay = this.getFirstDayInWeek(minDate);
 
-    const dayIndex = Math.floor(xpos / this.getDayWidth());
-    const currentDate = firstDay.addDays(dayIndex);
+    // Add 10 offset becase x-position might be off screen
+    const dayIndex = Math.floor((xpos + 10) / this.getDayWidth());
+    firstDay.addDays(dayIndex);
 
     const shouldUpdateMonth = (this.props.disableMonthChange === undefined || !this.props.disableMonthChange);
     if (shouldUpdateMonth) {
-      this.setMonthHeader(currentDate);
+      this.setMonthHeader(firstDay);
     }
-  }
-
-  getDayIndex(day, days) {
-    if (day) {
-      const dayIndex = days.findIndex((element, index, array) => {
-        return sameDate(element, day);
-      });
-      return dayIndex;
-    }
-    return -1;
-  }
-
-  getSelectedDayPosition() {
-    const dayIndex = this.getDayIndex(this.state.selectedDay, dateutils.page(this.state.currentMonth, this.props.firstDay));
-    if (dayIndex > -1) {
-      return Math.floor(dayIndex / 7) * 39;
-    }
-    return 0;
   }
 
   toggleCalendarView() {
@@ -264,21 +253,18 @@ class CollapsibleCalendar extends Component {
     let startOpacity;
     let endOpacity;
     if (expand) {
-      startHeight = calendarMinHeight;
-      endHeight = calendarMaxHeight;
-
+      startHeight = this.collapsibleMinHeight;
+      endHeight = this.collapsibleMaxHeight;
       startOpacity = 0;
       endOpacity = 1;
       
     } else {
-      startHeight = calendarMaxHeight;
-      endHeight = calendarMinHeight;
-
+      startHeight = this.collapsibleMaxHeight;
+      endHeight = this.collapsibleMinHeight;
       startOpacity = 1;
       endOpacity = 0;
 
-      setTimeout(() => { this.scrollToDateList(); }, 10);
-
+      setTimeout(() => { this.scrollToDate(); }, 10);
     }
 
     this.setState({
@@ -311,7 +297,7 @@ class CollapsibleCalendar extends Component {
       )]).start();
   }
 
-  renderDay(day, id, enableDiffMonth = false) {
+  renderDay(day, id, enableDiffMonth = false, highlightWeekend = true) {
     const minDate = parseDate(this.props.minDate);
     const maxDate = parseDate(this.props.maxDate);
     let state = '';
@@ -341,6 +327,7 @@ class CollapsibleCalendar extends Component {
           onPress={this.pressDay}
           day={day}
           marked={this.getDateMarking(day)}
+          highlightWeekend={highlightWeekend}
         >
           {day.getDate()}
         </DayComp>
@@ -375,11 +362,10 @@ class CollapsibleCalendar extends Component {
   renderWeek(days, id) {
     const week = [];
     days.forEach((day, id2) => {
-      week.push(this.renderDay(day, id2));
+      week.push(this.renderDay(day, id2, false, true));
     }, this);
     return (<View style={this.style.week} key={id}>{week}</View>);
   }
-
 
   renderWeekView() {
     const minDate = parseDate(this.props.minDate);
@@ -388,31 +374,20 @@ class CollapsibleCalendar extends Component {
     if (minDiff < 0) {
       minDiff += 7;
     }
-    const firstDay = minDate.addDays(-minDiff);
+    minDate.addDays(-minDiff);
 
     let maxDiff = 6 - maxDate.getDay() + this.props.firstDay;
     if (maxDiff > 6) {
       maxDiff -= 7;
     }
-    const lastDay = maxDate.addDays(maxDiff);
+    maxDate.addDays(maxDiff);
 
-    const days = fromTo(firstDay, lastDay);
+    const days = fromTo(minDate, maxDate);
     const week =[];
     days.forEach((day, idx) => {
-      week.push(this.renderDay(day, idx, true));
+      week.push(this.renderDay(day, idx, true, false));
     }, this);
     return (<View style={this.style.week}>{week}</View>);
-  }
-
-  renderFooter() {
-    return (
-      <View style={{ flex: 0, flexDirection: 'row', paddingBottom: 4, justifyContent: 'space-between', marginTop: 4}}>
-        <TouchableOpacity onPress={this.goToToday}>
-          <Text style={{fontSize: 14, color: '#5158B2', textDecorationLine: 'underline'}}>Go to today</Text>
-        </TouchableOpacity>
-        { this.renderDotLabels() }
-      </View>
-    );
   }
 
   render() {
@@ -430,7 +405,6 @@ class CollapsibleCalendar extends Component {
         indicator = true;
       }
     }
-
     
     const weekDaysNames = weekDayNames(this.props.firstDay);
     return (
@@ -457,7 +431,7 @@ class CollapsibleCalendar extends Component {
           ))}
         </View>
         
-        <Animated.View style={{height: this.state.calendarHeight, overflow: 'hidden', alignItems: 'center'}}>
+        <Animated.View style={[this.style.collapsible, {height: this.state.calendarHeight, overflow: 'hidden', alignItems: 'center'}]}>
           <Animated.View style={{overflow: 'hidden', opacity: this.state.calendarOpacity}}>
             {weeks}
             <View style={{flex: 1, flexDirection: 'column', justifyContent: 'flex-end'}}>
@@ -468,14 +442,12 @@ class CollapsibleCalendar extends Component {
           <Animated.View style={{ position: 'absolute', top: 0, left: 0, overflow: 'hidden',
             display: this.state.expanded ? 'none' : 'flex', opacity: this.state.dateListOpacity}}>
             <ScrollView ref={ref => {this.dateListScroll = ref;}} horizontal={true} pagingEnabled={true} scrollEventThrottle={0} overScrollMode='never'
-              showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} onScrollEndDrag={this.onDateListScroll}>
+              showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} onScroll={this.onDateListScroll}>
               { this.renderWeekView() }
             </ScrollView>
           </Animated.View>
         </Animated.View>
-        
 
-        
       </View>);
   }
 }

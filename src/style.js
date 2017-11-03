@@ -38,3 +38,6 @@ export const agendaTodayColor = textLinkColor;
 export const agendaKnobColor = Platform.OS === 'ios' ? '#f2F4f5' : '#4ac4f7';
 export const selectedTodayTextColor = '#ffffff';
 export const selectedTodayBackgroundColor = '#9D4182';
+export const collapsibleMinHeight = 38;
+export const collapsibleMaxHeight = 244;
+export const weekendBackgroundColor = '#F9F9F9';
