@@ -104,10 +104,7 @@ class Day extends Component {
         <View style={dateStyle}>
           <Text style={textStyle}>{String(this.props.children)}</Text>
         </View>
-        { 
-          dot && 
-          <View style={this.style.dotContainer}>{dot}</View>
-        }
+        <View style={this.style.dotContainer}>{dot}</View>
       </TouchableOpacity>
     );
   }

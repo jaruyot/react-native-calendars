@@ -50,6 +50,8 @@ export default function styleConstructor(theme={}) {
       backgroundColor: appStyle.weekendBackgroundColor
     },
     dotContainer: {
+      marginTop: 2,
+      height: 4,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center'
